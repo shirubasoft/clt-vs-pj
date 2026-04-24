@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ----------------------------------------------------------------
+   Editorial fintech — "Ledger"
+   Dark warm off-black paper, serif display, refined sans, mono nums.
+   CLT = amber/ember   PJ = teal/viridian
+---------------------------------------------------------------- */
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-paper: oklch(0.145 0.012 80);
+  --color-paper-2: oklch(0.185 0.014 80);
+  --color-paper-3: oklch(0.225 0.016 80);
+  --color-ink: oklch(0.965 0.014 85);
+  --color-ink-2: oklch(0.82 0.022 85);
+  --color-ink-3: oklch(0.62 0.022 85);
+  --color-rule: oklch(0.32 0.018 85);
+
+  --color-ember: oklch(0.78 0.155 62);     /* CLT — warm amber */
+  --color-ember-2: oklch(0.62 0.165 48);
+  --color-viridian: oklch(0.78 0.12 190);  /* PJ — cool teal */
+  --color-viridian-2: oklch(0.55 0.12 195);
+  --color-blood: oklch(0.60 0.17 25);      /* deductions / warnings */
+
+  --radius: 0.25rem;
+
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-card: var(--color-paper-2);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-paper-2);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-ember);
+  --color-primary-foreground: var(--color-paper);
+  --color-secondary: var(--color-paper-3);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-paper-3);
+  --color-muted-foreground: var(--color-ink-3);
+  --color-accent: var(--color-paper-3);
+  --color-accent-foreground: var(--color-ink);
+  --color-destructive: var(--color-blood);
+  --color-destructive-foreground: var(--color-ink);
+  --color-border: var(--color-rule);
+  --color-input: var(--color-rule);
+  --color-ring: var(--color-ember);
+}
+
+@layer base {
+  *, ::before, ::after {
+    border-color: var(--color-border);
+  }
+  html, body, #root {
+    height: 100%;
+  }
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "ss02", "cv01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(ellipse at 20% 0%, oklch(0.22 0.03 60 / 0.55), transparent 60%),
+      radial-gradient(ellipse at 100% 100%, oklch(0.20 0.04 200 / 0.35), transparent 55%),
+      var(--color-paper);
+    min-height: 100dvh;
+  }
+  /* Film grain overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  h1, h2, h3, h4, .display {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 144, "SOFT" 50;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Subtle section rule — hairline with dots */
+.rule-dotted {
+  border-top: 1px dashed var(--color-rule);
+}
+.rule-solid {
+  border-top: 1px solid var(--color-rule);
+}
+
+/* Small-caps editorial label */
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+  font-weight: 500;
+}
+
+/* Pulsing indicator */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.85); }
+}
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Column stripes for ledger */
+.ledger-row:nth-child(odd) {
+  background: oklch(1 0 0 / 0.012);
+}
+.ledger-row:hover {
+  background: oklch(1 0 0 / 0.03);
+}
+
+/* Focus ring */
+input:focus-visible, button:focus-visible, select:focus-visible, [role="slider"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--color-paper), 0 0 0 3px var(--color-ember);
+}
+
+/* Recharts surface */
+.recharts-cartesian-axis-tick-value,
+.recharts-legend-item-text,
+.recharts-text {
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  fill: var(--color-ink-3) !important;
+}
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--color-rule) !important;
+  stroke-dasharray: 2 3;
+}
+.recharts-default-tooltip {
+  background: var(--color-paper-2) !important;
+  border: 1px solid var(--color-rule) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-mono) !important;
+}
