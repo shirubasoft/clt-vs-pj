@@ -627,19 +627,25 @@ function StatCard({
 // Ledger — side-by-side financial breakdown
 // ──────────────────────────────────────────────────────────────────────────
 
-function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compare> }) {
-  const { clt, pj, safety, cltAdjustedAnnual, pjAdjustedAnnual } = comparison;
+type LedgerRow = {
+  label: string;
+  clt: number | string;
+  pj: number | string;
+  hint?: string;
+};
 
-  const rows: {
-    label: string;
-    clt: number | string;
-    pj: number | string;
-    hint?: string;
-    emphasis?: boolean;
-  }[] = [];
+// Column template only — callers add `grid` / `hidden md:grid` themselves so the
+// `display` utility doesn't collide with twMerge.
+const LEDGER_COLS =
+  "grid-cols-[minmax(0,1fr)_minmax(96px,auto)_minmax(96px,auto)] md:grid-cols-[minmax(0,1fr)_180px_180px]";
+
+function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compare> }) {
+  const { clt, pj, safety, cltAdjustedAnnual, pjAdjustedAnnual, winner } = comparison;
+
+  const mainRows: LedgerRow[] = [];
 
   if (pj.currency === "USD") {
-    rows.push({
+    mainRows.push({
       label: "Faturamento anual (USD)",
       clt: "—",
       pj: `US$ ${pj.grossAnnualOriginal.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
@@ -647,7 +653,7 @@ function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compar
     });
   }
 
-  rows.push(
+  mainRows.push(
     { label: "Valor bruto anual", clt: clt.grossAnnual, pj: pj.grossAnnual },
     { label: "INSS", clt: -clt.inssAnnual, pj: -pj.proLaboreINSSAnnual, hint: "progressivo / pró-labore" },
     {
@@ -665,7 +671,7 @@ function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compar
   );
 
   if (pj.exportTaxSaving > 0) {
-    rows.push({
+    mainRows.push({
       label: "Economia — exportação",
       clt: "—",
       pj: +pj.exportTaxSaving,
@@ -673,7 +679,7 @@ function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compar
     });
   }
   if (pj.iofAnnual > 0) {
-    rows.push({
+    mainRows.push({
       label: "IOF câmbio",
       clt: "—",
       pj: -pj.iofAnnual,
@@ -681,7 +687,7 @@ function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compar
     });
   }
 
-  rows.push(
+  mainRows.push(
     { label: "Contador", clt: "—", pj: -pj.accountantAnnual },
     { label: "13º salário (líq.)", clt: clt.thirteenthNet, pj: "—" },
     { label: "1/3 férias (líq.)", clt: clt.vacationNet, pj: "—" },
@@ -692,14 +698,10 @@ function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compar
       pj: -pj.outOfPocketBenefitsAnnual,
       hint: "VR, saúde, stipends",
     },
-    { label: "FGTS acumulado", clt: clt.fgtsAnnual, pj: "—", hint: "8% do salário ao ano" },
-    { label: "—", clt: "", pj: "" },
-    {
-      label: "Líquido antes de risco",
-      clt: clt.netWithBenefitsAnnual,
-      pj: pj.netCashAnnual,
-      emphasis: true,
-    },
+    { label: "FGTS acumulado", clt: clt.fgtsAnnual, pj: "—", hint: "8% do salário ao ano" }
+  );
+
+  const riskRows: LedgerRow[] = [
     {
       label: "Seguro-desemprego esperado",
       clt: +safety.expectedUnemploymentBenefit,
@@ -718,18 +720,7 @@ function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compar
       pj: -safety.pjSelfInsuranceCost,
       hint: "aporte anual para cobrir o risco",
     },
-    {
-      label: "Líquido ajustado ao risco",
-      clt: cltAdjustedAnnual,
-      pj: pjAdjustedAnnual,
-      emphasis: true,
-    },
-    {
-      label: "Alíquota efetiva",
-      clt: fmt.pct(clt.effectiveTaxRate),
-      pj: fmt.pct(pj.effectiveTaxRate),
-    }
-  );
+  ];
 
   return (
     <section>
@@ -739,8 +730,60 @@ function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compar
         <span className="h-px flex-1 bg-rule" />
       </div>
 
-      <div className="border border-rule bg-paper-2/20">
-        <div className="grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_180px_180px] border-b border-rule">
+      <LedgerCard rows={mainRows} withHeader />
+
+      <TotalStrip
+        eyebrow="Subtotal"
+        label="Líquido antes de risco"
+        clt={clt.netWithBenefitsAnnual}
+        pj={pj.netCashAnnual}
+      />
+
+      <LedgerCard rows={riskRows} sectionLabel="Ajustes ao risco" />
+
+      <TotalStrip
+        eyebrow="Total ajustado ao risco"
+        label={winner === "clt" ? "Com CLT, você sai na frente" : "Com PJ, você sai na frente"}
+        clt={cltAdjustedAnnual}
+        pj={pjAdjustedAnnual}
+        winner={winner}
+        final
+      />
+
+      {/* Alíquota efetiva — metadata footer, aligned with ledger columns */}
+      <div
+        className={cn(
+          "grid items-baseline border-t border-rule/50 mt-4 pt-3",
+          LEDGER_COLS
+        )}
+      >
+        <div className="px-4 text-[11px] uppercase tracking-widest text-ink-3">
+          Alíquota efetiva
+        </div>
+        <div className="px-4 text-right num text-[12px] text-ink-3">
+          {fmt.pct(clt.effectiveTaxRate)}
+        </div>
+        <div className="px-4 text-right num text-[12px] text-ink-3">
+          {fmt.pct(pj.effectiveTaxRate)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LedgerCard({
+  rows,
+  withHeader = false,
+  sectionLabel,
+}: {
+  rows: LedgerRow[];
+  withHeader?: boolean;
+  sectionLabel?: string;
+}) {
+  return (
+    <div className="border border-rule bg-paper-2/20">
+      {withHeader && (
+        <div className={cn("grid border-b border-rule", LEDGER_COLS)}>
           <div className="px-4 py-3 text-[11px] uppercase tracking-widest text-ink-3">
             Item
           </div>
@@ -751,40 +794,37 @@ function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compar
             PJ
           </div>
         </div>
-
-        {rows.map((r, i) => (
-          <div
-            key={i}
-            className={cn(
-              "ledger-row grid grid-cols-[1fr_auto_auto] md:grid-cols-[1fr_180px_180px] items-baseline border-b border-rule last:border-b-0",
-              r.label === "—" && "h-2 pointer-events-none"
-            )}
-          >
-            <div className="flex flex-col px-4 py-2.5">
-              <span
-                className={cn(
-                  "text-[13px]",
-                  r.emphasis ? "display text-[17px] text-ink" : "text-ink-2"
-                )}
-              >
-                {r.label === "—" ? "" : r.label}
+      )}
+      {sectionLabel && (
+        <div className="border-b border-rule/50 px-4 py-2">
+          <span className="eyebrow">{sectionLabel}</span>
+        </div>
+      )}
+      {rows.map((r, i) => (
+        <div
+          key={i}
+          className={cn(
+            "ledger-row grid items-baseline border-b border-rule last:border-b-0",
+            LEDGER_COLS
+          )}
+        >
+          <div className="flex min-w-0 flex-col px-4 py-2.5">
+            <span className="text-[13px] text-ink-2">{r.label}</span>
+            {r.hint && (
+              <span className="mt-0.5 text-[10.5px] font-mono text-ink-3">
+                {r.hint}
               </span>
-              {r.hint && (
-                <span className="text-[10.5px] font-mono text-ink-3 mt-0.5">
-                  {r.hint}
-                </span>
-              )}
-            </div>
-            <LedgerCell value={r.clt} emphasis={r.emphasis} />
-            <LedgerCell value={r.pj} emphasis={r.emphasis} />
+            )}
           </div>
-        ))}
-      </div>
-    </section>
+          <LedgerCell value={r.clt} />
+          <LedgerCell value={r.pj} />
+        </div>
+      ))}
+    </div>
   );
 }
 
-function LedgerCell({ value, emphasis }: { value: number | string; emphasis?: boolean }) {
+function LedgerCell({ value }: { value: number | string }) {
   if (value === "" || value === "—") {
     return (
       <div className="px-4 py-2.5 text-right text-ink-3 num text-[13px]">
@@ -803,13 +843,129 @@ function LedgerCell({ value, emphasis }: { value: number | string; emphasis?: bo
   return (
     <div
       className={cn(
-        "px-4 py-2.5 text-right num tabular-nums",
-        emphasis ? "text-[17px] font-medium" : "text-[13.5px]",
+        "px-4 py-2.5 text-right num tabular-nums text-[13.5px]",
         negative ? "text-blood" : "text-ink"
       )}
     >
       {negative ? "−" : ""}
       {fmt.brl(Math.abs(value))}
+    </div>
+  );
+}
+
+function TotalStrip({
+  eyebrow,
+  label,
+  clt,
+  pj,
+  winner,
+  final = false,
+}: {
+  eyebrow: string;
+  label: string;
+  clt: number;
+  pj: number;
+  winner?: "clt" | "pj";
+  final?: boolean;
+}) {
+  const cltWinning = winner === "clt";
+  const pjWinning = winner === "pj";
+  const rulePx = final ? "h-[1.5px]" : "h-px";
+
+  return (
+    <div className={cn(final ? "my-6" : "my-4")}>
+      <div className={cn(rulePx, "bg-rule")} />
+      <div
+        className={cn(
+          "px-5",
+          final ? "bg-paper-3/50 py-6" : "bg-paper-2/50 py-5"
+        )}
+      >
+        {/* Desktop — aligned with ledger columns */}
+        <div className={cn("hidden md:grid items-center", LEDGER_COLS)}>
+          <div className="px-0 flex flex-col gap-1 min-w-0">
+            <span className="eyebrow">{eyebrow}</span>
+            <span
+              className={cn(
+                "display leading-tight text-ink",
+                final ? "text-[26px]" : "text-[20px]"
+              )}
+            >
+              {label}
+            </span>
+          </div>
+          <div
+            className={cn(
+              "px-4 text-right num tabular-nums flex items-center justify-end gap-2",
+              final ? "text-[21px]" : "text-[17px]",
+              cltWinning ? "text-ember" : "text-ink-2"
+            )}
+          >
+            {fmt.brl(clt)}
+            {cltWinning && final && (
+              <span className="pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-ember" />
+            )}
+          </div>
+          <div
+            className={cn(
+              "px-4 text-right num tabular-nums flex items-center justify-end gap-2",
+              final ? "text-[21px]" : "text-[17px]",
+              pjWinning ? "text-viridian" : "text-ink-2"
+            )}
+          >
+            {fmt.brl(pj)}
+            {pjWinning && final && (
+              <span className="pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-viridian" />
+            )}
+          </div>
+        </div>
+
+        {/* Mobile — stacked */}
+        <div className="md:hidden flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <span className="eyebrow">{eyebrow}</span>
+            <span
+              className={cn(
+                "display leading-tight text-ink",
+                final ? "text-[20px]" : "text-[17px]"
+              )}
+            >
+              {label}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-4 border-t border-rule/40 pt-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] uppercase tracking-widest text-ember font-medium">
+                CLT
+              </span>
+              <span
+                className={cn(
+                  "num tabular-nums",
+                  final ? "text-[17px]" : "text-[14.5px]",
+                  cltWinning ? "text-ember" : "text-ink"
+                )}
+              >
+                {fmt.brl(clt)}
+              </span>
+            </div>
+            <div className="flex flex-col gap-0.5 items-end">
+              <span className="text-[9px] uppercase tracking-widest text-viridian font-medium">
+                PJ
+              </span>
+              <span
+                className={cn(
+                  "num tabular-nums",
+                  final ? "text-[17px]" : "text-[14.5px]",
+                  pjWinning ? "text-viridian" : "text-ink"
+                )}
+              >
+                {fmt.brl(pj)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className={cn(rulePx, "bg-rule")} />
     </div>
   );
 }
