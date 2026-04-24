@@ -38,6 +38,7 @@ import {
   type SafetyInput,
 } from "@/lib/tax";
 import { CompositionChart, BreakEvenChart } from "@/components/Charts";
+import { SectionNav } from "@/components/SectionNav";
 
 // ──────────────────────────────────────────────────────────────────────────
 // Default values — realistic Brazilian tech scenario, 2025
@@ -111,6 +112,7 @@ export default function App() {
       </div>
 
       <Footer />
+      <SectionNav />
     </div>
   );
 }
@@ -179,7 +181,7 @@ function InputPanel({
   return (
     <div className="flex flex-col gap-10">
       {/* CLT */}
-      <section className="flex flex-col gap-5">
+      <section id="section-clt" className="flex flex-col gap-5 scroll-mt-6">
         <SectionHeader
           icon={<Wallet className="h-3.5 w-3.5" />}
           eyebrow="Seção I"
@@ -235,7 +237,7 @@ function InputPanel({
       <Separator />
 
       {/* PJ */}
-      <section className="flex flex-col gap-5">
+      <section id="section-pj" className="flex flex-col gap-5 scroll-mt-6">
         <SectionHeader
           icon={<ScrollText className="h-3.5 w-3.5" />}
           eyebrow="Seção II"
@@ -381,7 +383,7 @@ function InputPanel({
       <Separator />
 
       {/* Safety */}
-      <section className="flex flex-col gap-5">
+      <section id="section-risco" className="flex flex-col gap-5 scroll-mt-6">
         <SectionHeader
           icon={<ShieldCheck className="h-3.5 w-3.5" />}
           eyebrow="Seção III"
@@ -495,10 +497,11 @@ function Verdict({
 
   return (
     <motion.section
+      id="section-veredicto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-      className="border border-rule bg-paper-2/40 px-6 py-8 md:px-10 md:py-12"
+      className="scroll-mt-6 border border-rule bg-paper-2/40 px-6 py-8 md:px-10 md:py-12"
     >
       <div className="flex items-center gap-3">
         <span className="eyebrow">O Veredicto</span>
@@ -723,7 +726,7 @@ function LedgerComparison({ comparison }: { comparison: ReturnType<typeof compar
   ];
 
   return (
-    <section>
+    <section id="section-ledger" className="scroll-mt-6">
       <div className="mb-4 flex items-center gap-3">
         <Asterisk className="h-4 w-4 text-ink-3" />
         <span className="eyebrow">O Livro-Razão</span>
@@ -976,7 +979,7 @@ function TotalStrip({
 
 function CompositionSection({ comparison }: { comparison: ReturnType<typeof compare> }) {
   return (
-    <section>
+    <section id="section-composicao" className="scroll-mt-6">
       <div className="mb-5 flex items-center gap-3">
         <span className="eyebrow">A Decomposição</span>
         <span className="h-px flex-1 bg-rule" />
@@ -1008,7 +1011,7 @@ function BreakEvenSection({
   comparison: ReturnType<typeof compare>;
 }) {
   return (
-    <section>
+    <section id="section-breakeven" className="scroll-mt-6">
       <div className="mb-5 flex items-center gap-3">
         <span className="eyebrow">O Ponto de Equilíbrio</span>
         <span className="h-px flex-1 bg-rule" />
@@ -1104,7 +1107,7 @@ function Sources({ items, label = "Fonte" }: { items: Src[]; label?: string }) {
 
 function Assumptions() {
   return (
-    <section className="mt-4">
+    <section id="section-fontes" className="mt-4 scroll-mt-6">
       <div className="mb-2 flex items-center gap-3">
         <span className="eyebrow">Notas do Editor</span>
         <span className="h-px flex-1 bg-rule" />
