@@ -4,6 +4,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Asterisk,
+  ExternalLink,
   ScrollText,
   ShieldCheck,
   Wallet,
@@ -874,6 +875,77 @@ function BreakEvenSection({
 // Assumptions
 // ──────────────────────────────────────────────────────────────────────────
 
+type Src = { label: string; url: string; publisher: string };
+
+const SOURCES = {
+  inss: {
+    label: "Tabela INSS 2026",
+    publisher: "Contabilizei",
+    url: "https://www.contabilizei.com.br/contabilidade-online/tabela-inss/",
+  },
+  irrf: {
+    label: "Tabela IRPF 2026 + Lei 15.270/2025",
+    publisher: "Contabilidade.com",
+    url: "https://contabilidade.com/blog/tabela-irpf-2026-faixas-aliquotas-reducao-do-imposto-e-historico-atualizado/",
+  },
+  simples: {
+    label: "Anexo III Simples Nacional 2026",
+    publisher: "Contabilizei",
+    url: "https://www.contabilizei.com.br/contabilidade-online/anexo-3-simples-nacional/",
+  },
+  lp: {
+    label: "Quanto minha empresa de serviços paga de impostos",
+    publisher: "Contabilizei",
+    url: "https://www.contabilizei.com.br/contabilidade-online/quanto-minha-empresa-de-servicos-paga-de-impostos-no-exterior/",
+  },
+  exportA: {
+    label: "Exportação de serviços com Simples — guia para devs",
+    publisher: "Colinear",
+    url: "https://colinear.com.br/exportacao-de-servicos-com-simples-nacional-guia-para-devs/",
+  },
+  exportB: {
+    label: "Quais impostos são isentos na exportação de serviços",
+    publisher: "Colinear",
+    url: "https://colinear.com.br/quais-impostos-sao-isentos-na-exportacao-de-servicos/",
+  },
+  exportC: {
+    label: "Tributação para programadores que recebem em dólar",
+    publisher: "Logos Contabilidade",
+    url: "https://logoscontabilidadedigital.com.br/tributacao-para-programadores-que-recebem-em-dolar/",
+  },
+  exportD: {
+    label: "Impostos sobre exportação de serviços",
+    publisher: "Remessa Online",
+    url: "https://www.remessaonline.com.br/blog/impostos-sobre-a-exportacao-de-servicos-veja-quais-a-empresa-deve-pagar/",
+  },
+} satisfies Record<string, Src>;
+
+function SourceLink({ src }: { src: Src }) {
+  return (
+    <a
+      href={src.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-baseline gap-1 text-viridian decoration-viridian/40 underline-offset-4 hover:underline transition-colors"
+    >
+      <span>{src.label}</span>
+      <ExternalLink className="h-3 w-3 translate-y-0.5" />
+      <span className="text-ink-3 font-mono text-[11px]">· {src.publisher}</span>
+    </a>
+  );
+}
+
+function Sources({ items, label = "Fonte" }: { items: Src[]; label?: string }) {
+  return (
+    <div className="mt-3 flex flex-col gap-1 pt-3 border-t border-rule/60">
+      <span className="eyebrow text-[10px]">{label}</span>
+      {items.map((s) => (
+        <SourceLink key={s.url} src={s} />
+      ))}
+    </div>
+  );
+}
+
 function Assumptions() {
   return (
     <section className="mt-4">
@@ -892,6 +964,7 @@ function Assumptions() {
             <strong className="text-ember">Lei 15.270/2025</strong> introduziu um redutor
             mensal que zera o imposto até R$ 5.000 de renda e reduz gradualmente até R$ 7.350
             pela fórmula <span className="num">R$ 978,62 − 0,133145 × renda bruta</span>.
+            <Sources items={[SOURCES.inss, SOURCES.irrf]} label="Fontes" />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="fgts">
@@ -910,6 +983,7 @@ function Assumptions() {
             meses) atinge 28%. Caso contrário, caem no Anexo V, com alíquotas significativamente
             maiores. Alíquota efetiva é calculada por (receita × alíquota − parcela a deduzir) /
             receita.
+            <Sources items={[SOURCES.simples]} />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="lp">
@@ -919,6 +993,7 @@ function Assumptions() {
             de R$ 240.000. CSLL 9%, PIS 0,65%, COFINS 3%, ISS conforme município (padrão 3%).
             Sem benefícios da tributação única do Simples — vale quando o faturamento é alto e
             o Fator-R baixo.
+            <Sources items={[SOURCES.lp]} />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="safety">
@@ -942,6 +1017,15 @@ function Assumptions() {
             sendo devidos. Incide IOF de 0,38% sobre o contrato de câmbio de ingresso. É
             obrigatório emitir nota fiscal para tomador no exterior e manter o contrato de
             câmbio arquivado. A conversão para BRL usa a cotação do fechamento de câmbio.
+            <Sources
+              items={[
+                SOURCES.exportA,
+                SOURCES.exportB,
+                SOURCES.exportC,
+                SOURCES.exportD,
+              ]}
+              label="Leituras recomendadas"
+            />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="limits">
@@ -955,6 +1039,40 @@ function Assumptions() {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      <div className="mt-10 border-t border-rule pt-8">
+        <div className="mb-4 flex items-center gap-3">
+          <ExternalLink className="h-3.5 w-3.5 text-viridian" />
+          <span className="eyebrow">Fontes & Leituras</span>
+          <span className="h-px flex-1 bg-rule" />
+        </div>
+        <p className="text-[13px] text-ink-3 mb-5 max-w-2xl leading-relaxed">
+          Todos os números foram cruzados com estas fontes em abril/2026. Para decidir de fato
+          entre CLT e PJ, converse com um contador — esta calculadora é um ponto de partida,
+          não um substituto profissional.
+        </p>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {Object.values(SOURCES).map((s) => (
+            <a
+              key={s.url}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-start gap-3 border border-rule p-4 bg-paper-2/30 hover:bg-paper-2/80 hover:border-viridian/60 transition-all"
+            >
+              <ExternalLink className="h-3.5 w-3.5 mt-0.5 text-ink-3 group-hover:text-viridian transition-colors shrink-0" />
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="text-[13.5px] text-ink-2 group-hover:text-ink transition-colors leading-tight">
+                  {s.label}
+                </span>
+                <span className="text-[11px] font-mono text-ink-3 truncate">
+                  {s.publisher} · {new URL(s.url).hostname.replace(/^www\./, "")}
+                </span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
